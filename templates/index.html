@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Medical Report Analyzer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧬 AI Medical Report Analyzer</h1>
+            <p class="subtitle">Upload your medical report for instant analysis and insights</p>
+        </header>
+
+        <div class="upload-section">
+            <div class="upload-box" id="uploadBox">
+                <div class="upload-icon">📄</div>
+                <h3>Drop your medical report here</h3>
+                <p>or click to browse</p>
+                <p class="file-types">Supports: PDF, JPG, PNG</p>
+                <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png" hidden>
+            </div>
+            <button id="analyzeBtn" class="btn-primary" disabled>Analyze Report</button>
+        </div>
+
+        <div id="loadingSection" class="loading-section" style="display: none;">
+            <div class="spinner"></div>
+            <p>Analyzing your report...</p>
+        </div>
+
+        <div id="resultsSection" class="results-section" style="display: none;">
+            <h2>📊 Analysis Results</h2>
+            
+            <!-- Enhanced Summary Section -->
+            <div class="summary-header">
+                <div class="summary-title">
+                    <h2>📊 Your Health Report Summary</h2>
+                    <p class="summary-subtitle" id="reportDate">Analysis completed</p>
+                </div>
+                <div class="summary-actions">
+                    <button class="action-btn" id="downloadReportBtn" title="Download Report">
+                        <span>📥</span> Download
+                    </button>
+                    <button class="action-btn" id="printReportBtn" title="Print Report">
+                        <span>🖨️</span> Print
+                    </button>
+                    <button class="action-btn" id="shareReportBtn" title="Share Report">
+                        <span>📤</span> Share
+                    </button>
+                </div>
+            </div>
+
+            <!-- Health Score Card -->
+            <div class="health-score-card">
+                <div class="score-content">
+                    <div class="score-circle" id="healthScoreCircle">
+                        <svg viewBox="0 0 200 200">
+                            <defs>
+                                <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                            <circle cx="100" cy="100" r="90" class="score-bg"></circle>
+                            <circle cx="100" cy="100" r="90" class="score-progress" id="scoreProgress"></circle>
+                        </svg>
+                        <div class="score-text">
+                            <div class="score-value" id="healthScore">0</div>
+                            <div class="score-label">Health Score</div>
+                        </div>
+                    </div>
+                    <div class="score-details">
+                        <h3 id="scoreTitle">Calculating...</h3>
+                        <p id="scoreDescription">Analyzing your test results...</p>
+                        <div class="score-breakdown">
+                            <div class="breakdown-item">
+                                <span class="breakdown-label">Normal Tests:</span>
+                                <span class="breakdown-value" id="normalPercentage">0%</span>
+                            </div>
+                            <div class="breakdown-item">
+                                <span class="breakdown-label">Tests Reviewed:</span>
+                                <span class="breakdown-value" id="testsReviewed">0</span>
+                            </div>
+                            <div class="breakdown-item">
+                                <span class="breakdown-label">Risk Level:</span>
+                                <span class="breakdown-value risk-badge" id="riskLevel">Low</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="summary-cards">
+                <div class="summary-card normal-card">
+                    <div class="card-header">
+                        <div class="card-icon">✅</div>
+                        <div class="card-trend" id="normalTrend">
+                            <span class="trend-icon">→</span>
+                        </div>
+                    </div>
+                    <div class="card-value" id="normalCount">0</div>
+                    <div class="card-label">Normal Range</div>
+                    <div class="card-footer">
+                        <span class="card-percentage" id="normalPercent">0%</span>
+                        <span class="card-subtitle">of total tests</span>
+                    </div>
+                </div>
+                <div class="summary-card high-card">
+                    <div class="card-header">
+                        <div class="card-icon">⚠️</div>
+                        <div class="card-trend" id="highTrend">
+                            <span class="trend-icon">→</span>
+                        </div>
+                    </div>
+                    <div class="card-value" id="highCount">0</div>
+                    <div class="card-label">Above Normal</div>
+                    <div class="card-footer">
+                        <span class="card-percentage" id="highPercent">0%</span>
+                        <span class="card-subtitle">needs attention</span>
+                    </div>
+                </div>
+                <div class="summary-card low-card">
+                    <div class="card-header">
+                        <div class="card-icon">⬇️</div>
+                        <div class="card-trend" id="lowTrend">
+                            <span class="trend-icon">→</span>
+                        </div>
+                    </div>
+                    <div class="card-value" id="lowCount">0</div>
+                    <div class="card-label">Below Normal</div>
+                    <div class="card-footer">
+                        <span class="card-percentage" id="lowPercent">0%</span>
+                        <span class="card-subtitle">needs attention</span>
+                    </div>
+                </div>
+                <div class="summary-card total-card">
+                    <div class="card-header">
+                        <div class="card-icon">📋</div>
+                        <div class="card-trend">
+                            <span class="trend-icon">✓</span>
+                        </div>
+                    </div>
+                    <div class="card-value" id="totalCount">0</div>
+                    <div class="card-label">Total Tests</div>
+                    <div class="card-footer">
+                        <span class="card-percentage">100%</span>
+                        <span class="card-subtitle">analyzed</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Insights Panel -->
+            <div class="quick-insights-panel">
+                <h3>🎯 Quick Insights</h3>
+                <div class="insights-grid" id="quickInsights">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+
+            <!-- Tests Needing Attention -->
+            <div class="attention-panel" id="attentionPanel" style="display: none;">
+                <h3>⚠️ Tests Requiring Attention</h3>
+                <div class="attention-list" id="attentionList">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+            
+            <!-- Chart Navigation Tabs -->
+            <div class="chart-tabs">
+                <button class="tab-btn active" data-tab="overview">📊 Overview</button>
+                <button class="tab-btn" data-tab="gauges">🎯 Gauges</button>
+                <button class="tab-btn" data-tab="trends">📈 Trends</button>
+                <button class="tab-btn" data-tab="advanced">🔬 Advanced</button>
+                <button class="tab-btn" data-tab="special">✨ Special</button>
+            </div>
+
+            <!-- Overview Tab -->
+            <div class="tab-content active" id="overview-tab">
+                <!-- Main Bar Chart -->
+                <div class="chart-section">
+                    <h3>📊 Test Results Overview</h3>
+                    <div id="barChartContainer" class="chart-container"></div>
+                </div>
+                
+                <!-- Pie Chart -->
+                <div class="chart-section">
+                    <h3>📈 Status Distribution</h3>
+                    <div id="pieChartContainer" class="chart-container"></div>
+                </div>
+
+                <!-- Radar Chart -->
+                <div class="chart-section">
+                    <h3>🕸️ Health Parameters Radar</h3>
+                    <div id="radarChartContainer" class="chart-container"></div>
+                </div>
+            </div>
+
+            <!-- Gauges Tab -->
+            <div class="tab-content" id="gauges-tab">
+                <div class="chart-section">
+                    <h3>🎯 Individual Test Gauges</h3>
+                    <div id="gaugeChartsContainer" class="gauge-grid"></div>
+                </div>
+            </div>
+
+            <!-- Trends Tab -->
+            <div class="tab-content" id="trends-tab">
+                <div class="chart-section">
+                    <h3>📉 Historical Trends (Simulated)</h3>
+                    <div id="trendChartContainer" class="chart-container"></div>
+                </div>
+
+                <div class="chart-section">
+                    <h3>📦 Distribution Analysis</h3>
+                    <div id="boxChartContainer" class="chart-container"></div>
+                </div>
+            </div>
+
+            <!-- Advanced Tab -->
+            <div class="tab-content" id="advanced-tab">
+                <div class="chart-section">
+                    <h3>🔥 Correlation Heatmap</h3>
+                    <div id="heatmapContainer" class="chart-container"></div>
+                </div>
+
+                <div class="chart-section">
+                    <h3>🌐 3D Parameter Visualization</h3>
+                    <div id="scatter3dContainer" class="chart-container"></div>
+                </div>
+
+                <div class="chart-section">
+                    <h3>🎻 Violin Plot Distribution</h3>
+                    <div id="violinContainer" class="chart-container"></div>
+                </div>
+            </div>
+
+            <!-- Special Tab -->
+            <div class="tab-content" id="special-tab">
+                <div class="chart-section">
+                    <h3>💧 Waterfall Chart - Deviation Analysis</h3>
+                    <div id="waterfallContainer" class="chart-container"></div>
+                </div>
+
+                <div class="chart-section">
+                    <h3>🎯 Polar Bar Chart</h3>
+                    <div id="polarContainer" class="chart-container"></div>
+                </div>
+
+                <div class="chart-section">
+                    <h3>🌅 Sunburst Hierarchy</h3>
+                    <div id="sunburstContainer" class="chart-container"></div>
+                </div>
+
+                <div class="chart-section">
+                    <h3>📊 Funnel Analysis</h3>
+                    <div id="funnelContainer" class="chart-container"></div>
+                </div>
+
+                <div class="chart-section">
+                    <h3>🔄 Sankey Flow Diagram</h3>
+                    <div id="sankeyContainer" class="chart-container"></div>
+                </div>
+
+                <div class="chart-section">
+                    <h3>📈 KPI Indicators</h3>
+                    <div id="kpiContainer" class="kpi-grid"></div>
+                </div>
+            </div>
+            
+            <!-- Interactive Comparison Section -->
+            <div class="comparison-section">
+                <h3>🔄 Interactive Value Comparison</h3>
+                <div class="comparison-container">
+                    <div class="comparison-controls">
+                        <label for="testSelector">Select Test:</label>
+                        <select id="testSelector" class="test-selector">
+                            <option value="">Choose a test...</option>
+                        </select>
+                    </div>
+                    <div id="comparisonDisplay" class="comparison-display">
+                        <div class="comparison-bar-container">
+                            <div class="range-labels">
+                                <span class="label-min">Min</span>
+                                <span class="label-normal">Normal Range</span>
+                                <span class="label-max">Max</span>
+                            </div>
+                            <div class="comparison-bar">
+                                <div class="range-low"></div>
+                                <div class="range-normal"></div>
+                                <div class="range-high"></div>
+                                <div class="value-marker" id="valueMarker">
+                                    <span class="marker-label">Your Value</span>
+                                </div>
+                            </div>
+                            <div class="comparison-values">
+                                <span id="compMinValue">-</span>
+                                <span id="compYourValue" class="your-value-display">-</span>
+                                <span id="compMaxValue">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Table -->
+            <div id="tableContainer" class="table-container">
+                <h3>📋 Detailed Results Table</h3>
+                <div class="table-wrapper">
+                    <table id="resultsTable">
+                        <thead>
+                            <tr>
+                                <th>Test Name</th>
+                                <th>Your Value</th>
+                                <th>Normal Range</th>
+                                <th>Unit</th>
+                                <th>Status</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Health Insights -->
+            <div id="insightsContainer" class="insights-container">
+                <h3>💡 Health Insights & Recommendations</h3>
+                <div id="insightsList"></div>
+            </div>
+        </div>
+
+        <div id="errorSection" class="error-section" style="display: none;">
+            <div class="error-icon">⚠️</div>
+            <p id="errorMessage"></p>
+        </div>
+    </div>
+
+    <!-- AI Chatbot -->
+    <div class="chatbot-container" id="chatbotContainer">
+        <div class="chatbot-header" id="chatbotHeader">
+            <div class="chatbot-title">
+                <span class="chatbot-icon">🤖</span>
+                <span>AI Health Assistant</span>
+            </div>
+            <button class="chatbot-toggle" id="chatbotToggle">−</button>
+        </div>
+        <div class="chatbot-body" id="chatbotBody">
+            <div class="chatbot-messages" id="chatbotMessages">
+                <div class="bot-message">
+                    <div class="message-avatar">🤖</div>
+                    <div class="message-content">
+                        <p>Hi! I'm your AI Health Assistant. I can help you understand your medical test results.</p>
+                        <p>Try asking me:</p>
+                        <ul>
+                            <li>"What is hemoglobin?"</li>
+                            <li>"Why is my glucose high?"</li>
+                            <li>"How to improve WBC count?"</li>
+                            <li>"What are normal ranges?"</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="chatbot-input-container">
+                <input type="text" id="chatbotInput" class="chatbot-input" placeholder="Ask me anything about your health...">
+                <button id="chatbotVoice" class="chatbot-voice" title="Voice Input">
+                    <span>🎤</span>
+                </button>
+                <button id="chatbotSend" class="chatbot-send">
+                    <span>➤</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chatbot Floating Button -->
+    <button class="chatbot-float-btn" id="chatbotFloatBtn">
+        <span class="chat-icon">💬</span>
+        <span class="chat-text">Ask AI</span>
+    </button>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
