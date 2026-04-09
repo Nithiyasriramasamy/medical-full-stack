@@ -1,4 +1,8 @@
 import os
+import sys
+print(f"--- SYSTEM: Starting application from {os.getcwd()}")
+print(f"--- SYSTEM: Python version: {sys.version}")
+print(f"--- SYSTEM: Script path: {os.path.abspath(__file__)}")
 import re
 import json
 import random

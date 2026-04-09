@@ -2,18 +2,14 @@ services:
   - type: web
     name: medical-report-analyzer
     env: docker
-    plan: free # Can be upgraded to 'starter' for more RAM/CPU
-    region: oregon # Render's Oregon region
+    plan: free # Standard free tier
     healthCheckPath: /
     envVars:
       - key: FLASK_ENV
         value: production
       - key: TESSERACT_CMD
         value: tesseract
-      - key: PYTHON_VERSION
-        value: 3.11.0
       - key: PORT
         value: "10000"
-    # Note: Render automatically detects the Dockerfile in the root.
-    # To use this file, go to New+ -> Blueprint on the Render dashboard.
-    # Do NOT create as a manual Web Service, as that may default to Python env.
+    # Note: Go to New+ -> Blueprint on Render to use this.
+    # If the name is taken, Render will add a suffix.
