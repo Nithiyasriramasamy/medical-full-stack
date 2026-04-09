@@ -35,6 +35,14 @@ pytesseract.pytesseract.tesseract_cmd = get_tesseract_path()
 app = Flask(__name__)
 CORS(app) # Enable Cross-Origin Resource Sharing
 
+# Log Tesseract location for debugging
+print(f"--- STARTUP: Tesseract CMD set to: {pytesseract.pytesseract.tesseract_cmd}")
+try:
+    version = pytesseract.get_tesseract_version()
+    print(f"--- STARTUP: Tesseract version detected: {version}")
+except Exception as e:
+    print(f"--- STARTUP WARNING: Could not detect Tesseract version. Error: {e}")
+
 # Configure upload folder
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 app.config['UPLOAD_FOLDER'] = os.path.join(BASE_DIR, 'uploads')
