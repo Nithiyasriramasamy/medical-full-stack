@@ -893,6 +893,7 @@ def api_status():
     return jsonify({
         'status': 'online',
         'message': 'Medical Analysis API is running',
+        'tesseract_path': pytesseract.pytesseract.tesseract_cmd,
         'endpoints': {
             'analyze': '/analyze (POST)',
             'chat': '/chat (POST)'
