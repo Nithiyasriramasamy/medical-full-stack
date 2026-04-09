@@ -13,11 +13,30 @@ import plotly.express as px
 from werkzeug.utils import secure_filename
 import cv2
 
-# Configure Tesseract path
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+# Configure Tesseract path - try to find it dynamically for Linux, use default for Windows
+def get_tesseract_path():
+    # If environment variable is set (e.g. on Render), use it
+    env_path = os.environ.get('TESSERACT_CMD')
+    if env_path:
+        return env_path
+    
+    # Common Windows path
+    windows_path = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+    if os.path.exists(windows_path):
+        return windows_path
+    
+    # On Linux, it's usually in the PATH
+    return 'tesseract'
 
-app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = 'uploads'
+pytesseract.pytesseract.tesseract_cmd = get_tesseract_path()
+
+# Initialize Flask with separate frontend folders
+app = Flask(__name__, 
+            template_folder='../frontend/templates', 
+            static_folder='../frontend/static')
+# Configure upload folder
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+app.config['UPLOAD_FOLDER'] = os.path.join(BASE_DIR, 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf'}
 
@@ -25,7 +44,8 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf'}
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # Load reference data
-reference_df = pd.read_csv('reference_data.csv')
+reference_path = os.path.join(BASE_DIR, 'reference_data.csv')
+reference_df = pd.read_csv(reference_path)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -856,7 +876,15 @@ def create_visualization(comparison_results):
     return charts
 
 @app.route('/')
-def index():
+def login():
+    return render_template('login.html')
+
+@app.route('/home')
+def home():
+    return render_template('home.html')
+
+@app.route('/analyze')
+def analyze():
     return render_template('index.html')
 
 @app.route('/chat', methods=['POST'])

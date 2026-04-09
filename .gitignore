@@ -129,8 +129,8 @@ dmypy.json
 .pyre/
 
 # Uploaded files
-uploads/*
-!uploads/.gitkeep
+backend/uploads/*
+!backend/uploads/.gitkeep
 
 # IDE files
 .vscode/
