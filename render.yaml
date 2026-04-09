@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: medical-report-analyzer
+    env: docker
+    plan: free # Can be changed to 'starter' for more RAM/CPU
+    region: oregon # or your preferred region
+    healthCheckPath: /
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: TESSERACT_CMD
+        value: tesseract
+      - key: PYTHON_VERSION
+        value: 3.11.0
+    # Render automatically uses the Dockerfile in the root
