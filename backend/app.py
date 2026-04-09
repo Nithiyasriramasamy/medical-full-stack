@@ -2,7 +2,8 @@ import os
 import re
 import json
 import random
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 import pytesseract
 from PIL import Image
 import pdf2image
@@ -30,10 +31,10 @@ def get_tesseract_path():
 
 pytesseract.pytesseract.tesseract_cmd = get_tesseract_path()
 
-# Initialize Flask with separate frontend folders
-app = Flask(__name__, 
-            template_folder='../frontend/templates', 
-            static_folder='../frontend/static')
+# Initialize Flask as an API only
+app = Flask(__name__)
+CORS(app) # Enable Cross-Origin Resource Sharing
+
 # Configure upload folder
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 app.config['UPLOAD_FOLDER'] = os.path.join(BASE_DIR, 'uploads')
@@ -876,16 +877,16 @@ def create_visualization(comparison_results):
     return charts
 
 @app.route('/')
-def login():
-    return render_template('login.html')
+def api_status():
+    return jsonify({
+        'status': 'online',
+        'message': 'Medical Analysis API is running',
+        'endpoints': {
+            'analyze': '/analyze (POST)',
+            'chat': '/chat (POST)'
+        }
+    })
 
-@app.route('/home')
-def home():
-    return render_template('home.html')
-
-@app.route('/analyze')
-def analyze():
-    return render_template('index.html')
 
 @app.route('/chat', methods=['POST'])
 def chat():

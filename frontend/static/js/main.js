@@ -1,4 +1,5 @@
 let selectedFile = null;
+const API_BASE_URL = 'https://medical-full-stack-2.onrender.com';
 
 const uploadBox = document.getElementById('uploadBox');
 const fileInput = document.getElementById('fileInput');
@@ -59,7 +60,7 @@ analyzeBtn.addEventListener('click', async () => {
     formData.append('file', selectedFile);
     
     try {
-        const response = await fetch('/analyze', {
+        const response = await fetch(`${API_BASE_URL}/analyze`, {
             method: 'POST',
             body: formData
         });
@@ -586,7 +587,7 @@ async function sendMessage() {
     const typingId = showTypingIndicator();
     
     try {
-        const response = await fetch('/chat', {
+        const response = await fetch(`${API_BASE_URL}/chat`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
